@@ -1,2 +1,4 @@
 .env
 sample.json
+*/__pycache__/
+*.egg-info

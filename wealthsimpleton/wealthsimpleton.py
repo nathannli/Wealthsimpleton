@@ -1,19 +1,21 @@
-import os
-import json
-from dotenv import load_dotenv
-import tkinter as tk
-from datetime import datetime
-import argparse
-import random
-import time
 import getpass
+import os
+import time
+import tkinter as tk
+from datetime import date, datetime
 
+from dotenv import load_dotenv
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium_stealth import stealth
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC\
+load_dotenv()
+BASE_LINK = "https://my.wealthsimple.com"
+CREDIT_CARD_LINK = f"{BASE_LINK}/{os.getenv('WS_CREDIT_LINK')}"
+DEBT_LINK = f"{BASE_LINK}/{os.getenv('WS_DEBT_LINK')}"
+
 
 # Function to get the screen width and height
 def get_screen_dimensions():
@@ -23,32 +25,22 @@ def get_screen_dimensions():
     root.destroy()
     return screen_width, screen_height
 
+
 # Convert a date/time string from 'January 30' or 'January 30, 2024' format to a date
 def convert_datetime(input_string):
     current_year = datetime.now().year
-    if ',' in input_string:
-        date_format = '%B %d, %Y'
+    if "," in input_string:
+        date_format = "%B %d, %Y"
     else:
-        date_format = '%B %d'
+        date_format = "%B %d"
         input_string += f", {current_year}"  # Add the current year
     return datetime.strptime(input_string, date_format)
 
-# Main function
-if __name__ == "__main__":
-    # Validate arguments
-    output_path=""
-    after_str=None
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--file', help='Where to save the output (can be an existing file for incremental scraping)')
-    parser.add_argument('--after', help='A \'Y-m-d H:M\' string to filter out orders older than a certain date/time')
-    args = parser.parse_args()
-    if args.file:
-        output_path = args.file
-    if args.after:
-        after_str = args.after
 
+def get_transactions(
+    after_date: date = None, account_activity_url: str = CREDIT_CARD_LINK
+) -> list[dict]:
     # Setup Webdriver and load env. vars.
-    load_dotenv()
     screen_width, screen_height = get_screen_dimensions()
     window_width = screen_width // 2
     window_height = screen_height
@@ -62,36 +54,47 @@ if __name__ == "__main__":
         options.add_argument(f"--user-data-dir={dataDir}")
         options.add_argument(f"--profile-directory=Default")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
+    options.add_experimental_option("useAutomationExtension", False)
     driver = webdriver.Chrome(options=options)
-    stealth(driver,
+    stealth(
+        driver,
         languages=["en-US", "en"],
         vendor="Google Inc.",
         platform="Win32",
         webgl_vendor="Intel Inc.",
         renderer="Intel Iris OpenGL Engine",
         fix_hairline=True,
-        )
+    )
 
-    driver.get("https://my.wealthsimple.com")
+    driver.get(BASE_LINK)
     email = os.getenv("WS_EMAIL")
     password = os.getenv("WS_PASSWORD")
-    if (email): # If not defined, you can login manually
-        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div > div > div > input")))
+    if email:  # If not defined, you can login manually
+        WebDriverWait(driver, 60).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div > div > div > input"))
+        )
         fields = driver.find_elements(By.CSS_SELECTOR, "div > div > div > input")
         fields[0].send_keys(email)
         fields[1].click()
-    if (password): # If not defined, you can login manually
-        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div > div > div > input")))
+    if password:  # If not defined, you can login manually
+        WebDriverWait(driver, 60).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div > div > div > input"))
+        )
         fields = driver.find_elements(By.CSS_SELECTOR, "div > div > div > input")
         fields[1].send_keys(password)
         fields[0].click()
-    if (email and password): # If not defined, you can login manually
+    if email and password:  # If not defined, you can login manually
         driver.find_elements(By.CSS_SELECTOR, "div > div > div > button").pop().click()
-    WebDriverWait(driver, 3600).until(EC.url_changes(driver.current_url)) # Long timeout needed for manual login or 2FA
-    driver.get("https://my.wealthsimple.com/app/activity")
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button/div/div/div[2]/p[1]")))
-    time.sleep(2) # If you need to scroll down to 'Load More', increase this timeout to have enough time to scroll manually (scrolling is not automated)
+    WebDriverWait(driver, 3600).until(
+        EC.url_changes(driver.current_url)
+    )  # Long timeout needed for manual login or 2FA
+    driver.get(account_activity_url)
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//button/div/div/div[2]/p[1]"))
+    )
+    time.sleep(
+        2
+    )  # If you need to scroll down to 'Load More', increase this timeout to have enough time to scroll manually (scrolling is not automated)
     tickers = driver.find_elements(By.XPATH, "//button/div/div/div[2]/p[1]")
     transactions = []
     for x in range(len(tickers)):
@@ -105,30 +108,44 @@ if __name__ == "__main__":
         time.sleep(1)
         details_div = amount.find_element(By.XPATH, "../../../../../div[2]")
         try:
-            date = convert_datetime(details_div.find_element(By.XPATH, "//p[text() = 'Date']/../div/div/p").text).isoformat()
+            date = convert_datetime(
+                details_div.find_element(
+                    By.XPATH, "//p[text() = 'Date']/../div/div/p"
+                ).text
+            ).isoformat()
         except:
             try:
-                date = convert_datetime(details_div.find_element(By.XPATH, "//p[text() = 'Filled']/../div/div/p").text).isoformat()
+                date = convert_datetime(
+                    details_div.find_element(
+                        By.XPATH, "//p[text() = 'Filled']/../div/div/p"
+                    ).text
+                ).isoformat()
             except:
-                date = convert_datetime(details_div.find_element(By.XPATH, "//p[text() = 'Submitted']/../div/div/p").text).isoformat()
+                date = convert_datetime(
+                    details_div.find_element(
+                        By.XPATH, "//p[text() = 'Submitted']/../div/div/p"
+                    ).text
+                ).isoformat()
 
-        if after_str is not None:
-            after_date = datetime.strptime(after_str, '%Y-%m-%d %H:%M')
+        if after_date is not None:
             curr_date = datetime.fromisoformat(date)
             if after_date > curr_date:
-                break   
-        
-        transactions.append({
-            "description": ticker.text,
-            "type": transactionType.text,
-            "amount": amount.text,
-            "date": date
-        })
+                break
+
+        transactions.append(
+            {
+                "description": ticker.text,
+                "type": transactionType.text,
+                "amount": amount.text,
+                "date": date,
+            }
+        )
         amount.click()
 
     # Output
-    report = json.dumps(transactions, indent=4)
-    print(report)
-    if output_path:
-        with open(output_path, 'w') as f:
-            f.write(report)
+    return transactions
+
+
+if __name__ == "__main__":
+    transactions = get_transactions(after_date=None)
+    print(transactions)
