@@ -1,5 +1,6 @@
 import getpass
 import os
+import shutil
 import time
 import tkinter as tk
 from datetime import date, datetime
@@ -33,9 +34,16 @@ def convert_datetime(input_string):
     return datetime.strptime(input_string, date_format)
 
 
+def delete_data_dir():
+    dataDir = f"/home/{getpass.getuser()}/.config/google-chrome"
+    if os.path.isdir(dataDir):
+        shutil.rmtree(dataDir)
+
+
 def get_transactions(
     account_activity_url_suffix: str, after_date: date = None
 ) -> list[dict]:
+    delete_data_dir()
     print(f"{account_activity_url_suffix=}")
     account_activity_url = f"{BASE_LINK}/{account_activity_url_suffix}"
     print(f"{account_activity_url=}")
@@ -88,7 +96,7 @@ def get_transactions(
         EC.url_changes(driver.current_url)
     )  # Long timeout needed for manual login or 2FA
     driver.get(account_activity_url)
-    WebDriverWait(driver, 10).until(
+    WebDriverWait(driver, 500).until(
         EC.presence_of_element_located((By.XPATH, "//button/div/div/div[2]/p[1]"))
     )
     time.sleep(
