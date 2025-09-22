@@ -100,9 +100,9 @@ def get_transactions(
         EC.presence_of_element_located((By.XPATH, "//button/div/div/div[2]/p[1]"))
     )
     print("Load more transactions now...")
-    time.sleep(
-        30
-    )  # If you need to scroll down to 'Load More', increase this timeout to have enough time to scroll manually (scrolling is not automated)
+    user_input = input("Type 'ok' when you have finished loading more transactions: ")
+    while user_input.lower() != 'ok':
+        user_input = input("Please type 'ok' to continue: ")
     print("Load more transactions done")
     tickers = driver.find_elements(By.XPATH, "//button/div/div/div[2]/p[1]")
     transactions = []
