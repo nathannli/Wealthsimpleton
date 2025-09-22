@@ -99,9 +99,11 @@ def get_transactions(
     WebDriverWait(driver, 500).until(
         EC.presence_of_element_located((By.XPATH, "//button/div/div/div[2]/p[1]"))
     )
+    print("Load more transactions now...")
     time.sleep(
-        2
+        30
     )  # If you need to scroll down to 'Load More', increase this timeout to have enough time to scroll manually (scrolling is not automated)
+    print("Load more transactions done")
     tickers = driver.find_elements(By.XPATH, "//button/div/div/div[2]/p[1]")
     transactions = []
     for x in range(len(tickers)):
