@@ -4,17 +4,13 @@ import time
 import tkinter as tk
 from datetime import date, datetime
 
-from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium_stealth import stealth
 
-load_dotenv()
 BASE_LINK = "https://my.wealthsimple.com"
-CREDIT_CARD_LINK = f"{BASE_LINK}/{os.getenv('WS_CREDIT_LINK')}"
-DEBT_LINK = f"{BASE_LINK}/{os.getenv('WS_DEBT_LINK')}"
 
 
 # Function to get the screen width and height
@@ -38,8 +34,11 @@ def convert_datetime(input_string):
 
 
 def get_transactions(
-    after_date: date = None, account_activity_url: str = CREDIT_CARD_LINK
+    account_activity_url_suffix: str, after_date: date = None
 ) -> list[dict]:
+    print(f"{account_activity_url_suffix=}")
+    account_activity_url = f"{BASE_LINK}/{account_activity_url_suffix}"
+    print(f"{account_activity_url=}")
     # Setup Webdriver and load env. vars.
     screen_width, screen_height = get_screen_dimensions()
     window_width = screen_width // 2
@@ -52,7 +51,7 @@ def get_transactions(
         dataDir = f"/home/{getpass.getuser()}/.config/google-chrome"
     if os.path.isdir(dataDir):
         options.add_argument(f"--user-data-dir={dataDir}")
-        options.add_argument(f"--profile-directory=Default")
+        options.add_argument("--profile-directory=Default")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     driver = webdriver.Chrome(options=options)
