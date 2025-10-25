@@ -20,4 +20,5 @@ The data scraped includes:
    - If you skip this, you will need to login manually when the script starts.
    - Note that even with these variables defined, you may still need to manually perform some login steps like 2FA or CAPTCHA.
    - recommended for speed
+   - the `.env` file placement should be with your main scripts, not in this repo. Unless your environment variables are system-wide (i assume not), you are most likely using something like `dotenv` to temporarily load them in.
 5. pip install ../Wealthsimpleton/  or pip install ../path to your Wealthsimpleton/
