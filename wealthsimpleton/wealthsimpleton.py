@@ -43,6 +43,7 @@ def delete_data_dir():
 def get_transactions(
     account_activity_url_suffix: str, after_date: date = None
 ) -> list[dict]:
+    print("Getting transactions...")
     delete_data_dir()
     print(f"{account_activity_url_suffix=}")
     account_activity_url = f"{BASE_LINK}/{account_activity_url_suffix}"
@@ -151,6 +152,7 @@ def get_transactions(
         )
         amount.click()
 
+    print(f"{transactions=}")
     # Output
     return transactions
 
