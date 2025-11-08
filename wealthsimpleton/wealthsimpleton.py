@@ -120,7 +120,7 @@ def get_transactions(
         try:
             date = convert_datetime(
                 details_div.find_element(
-                    By.XPATH, "//p[text() = 'Date']/../div/div/p"
+                    By.XPATH, "//p[text() = 'Date']/../../div[2]/div/p"
                 ).text
             ).isoformat()
         except:
