@@ -12,7 +12,6 @@ The data scraped includes:
 
 ## Usage
 
-0. recommended to be used on macos (tested on sequoia & tahoe). Had logging in/web scraping issues on linux (ubuntu)
 1. Ensure Python dependencies are installed: `pip install -r requirements.txt`
 2. Ensure you have Chromium or Google Chrome installed.
 3. Ensure you have Chrome Webdriver installed and that it is compatible with the version of Chromium/Chrome you have.
