@@ -1,5 +1,6 @@
 import getpass
 import os
+import platform
 import shutil
 import time
 import tkinter as tk
@@ -35,9 +36,13 @@ def convert_datetime(input_string):
 
 
 def delete_data_dir():
-    dataDir = f"/home/{getpass.getuser()}/.config/google-chrome"
-    if os.path.isdir(dataDir):
-        shutil.rmtree(dataDir)
+    if is_linux():
+        dataDir = f"/home/{getpass.getuser()}/.config/google-chrome"
+        if os.path.isdir(dataDir):
+            shutil.rmtree(dataDir)
+
+def is_linux():
+    return platform.system() == "Linux"
 
 
 def get_transactions(
@@ -55,12 +60,13 @@ def get_transactions(
     options = webdriver.ChromeOptions()
     options.add_argument(f"window-size={window_width},{window_height}")
     options.add_argument(f"window-position={screen_width},0")
-    dataDir = f"/home/{getpass.getuser()}/.config/chromium"
-    if not os.path.isdir(dataDir):
-        dataDir = f"/home/{getpass.getuser()}/.config/google-chrome"
-    if os.path.isdir(dataDir):
-        options.add_argument(f"--user-data-dir={dataDir}")
-        options.add_argument("--profile-directory=Default")
+    if is_linux:
+        dataDir = f"/home/{getpass.getuser()}/.config/chromium"
+        if not os.path.isdir(dataDir):
+            dataDir = f"/home/{getpass.getuser()}/.config/google-chrome"
+        if os.path.isdir(dataDir):
+            options.add_argument(f"--user-data-dir={dataDir}")
+            options.add_argument("--profile-directory=Default")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
     driver = webdriver.Chrome(options=options)
@@ -92,7 +98,8 @@ def get_transactions(
         fields[1].send_keys(password)
         fields[0].click()
     if email and password:  # If not defined, you can login manually
-        driver.find_elements(By.CSS_SELECTOR, "div > div > div > button").pop().click()
+        # attempt login
+        driver.find_elements(By.CSS_SELECTOR, "body > div.ng-scope > ws-card-loading-indicator > div > div > div.card-loading-fade-in.card-loading-content.ng-scope > div > ng-transclude > div > layout > div > div > react-router > span > div > div > main > div > div > div > div > div > div > div > form > div.sc-9b4b78e7-0.eFQcpq > div > button").pop().click()
     WebDriverWait(driver, 3600).until(
         EC.url_changes(driver.current_url)
     )  # Long timeout needed for manual login or 2FA
