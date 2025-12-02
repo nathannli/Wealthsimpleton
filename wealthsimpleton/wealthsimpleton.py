@@ -49,7 +49,8 @@ def get_transactions(
     account_activity_url_suffix: str, after_date: date = None
 ) -> list[dict]:
     print("Getting transactions...")
-    delete_data_dir()
+    if is_linux():
+        delete_data_dir()
     print(f"{account_activity_url_suffix=}")
     account_activity_url = f"{BASE_LINK}/{account_activity_url_suffix}"
     print(f"{account_activity_url=}")
@@ -60,7 +61,7 @@ def get_transactions(
     options = webdriver.ChromeOptions()
     options.add_argument(f"window-size={window_width},{window_height}")
     options.add_argument(f"window-position={screen_width},0")
-    if is_linux:
+    if is_linux():
         dataDir = f"/home/{getpass.getuser()}/.config/chromium"
         if not os.path.isdir(dataDir):
             dataDir = f"/home/{getpass.getuser()}/.config/google-chrome"
@@ -99,7 +100,7 @@ def get_transactions(
         fields[0].click()
     if email and password:  # If not defined, you can login manually
         # attempt login
-        driver.find_elements(By.CSS_SELECTOR, "body > div.ng-scope > ws-card-loading-indicator > div > div > div.card-loading-fade-in.card-loading-content.ng-scope > div > ng-transclude > div > layout > div > div > react-router > span > div > div > main > div > div > div > div > div > div > div > form > div.sc-9b4b78e7-0.eFQcpq > div > button").pop().click()
+        driver.find_elements(By.CSS_SELECTOR, "button.sc-a6b2bf40-0.KQfvu.sc-a44f0cd-0.eGhQIJ").pop().click()
     WebDriverWait(driver, 3600).until(
         EC.url_changes(driver.current_url)
     )  # Long timeout needed for manual login or 2FA
