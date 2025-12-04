@@ -100,7 +100,7 @@ def get_transactions(
         fields[0].click()
     if email and password:  # If not defined, you can login manually
         # attempt login
-        driver.find_elements(By.CSS_SELECTOR, "button.sc-a6b2bf40-0.KQfvu.sc-a44f0cd-0.eGhQIJ").pop().click()
+        driver.find_elements(By.CSS_SELECTOR, "form button[data-testid=\"login-form-submit-ftux\"]").pop().click()
     WebDriverWait(driver, 3600).until(
         EC.url_changes(driver.current_url)
     )  # Long timeout needed for manual login or 2FA
